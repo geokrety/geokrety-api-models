@@ -1,0 +1,40 @@
+language: python
+python:
+  - '2.7'
+cache: pip
+addons:
+  - mariadb: '10.0'
+
+env:
+  - >-
+    TEST_DATABASE_URL=mysql+mysqldb://root@localhost/geokrety_unittest?charset=utf8mb4
+
+install:
+  - pip install -r requirements.dev.txt
+
+before_script:
+  - mysql -e 'FLUSH TABLES; DROP DATABASE IF EXISTS geokrety_unittest; CREATE DATABASE geokrety_unittest CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'
+script:
+  - nosetests tests/ -v --with-coverage --with-id --nologcapture --stop
+after_success:
+  - 'bash <(curl -s https://codecov.io/bash)'
+  - python setup.py sdist
+
+deploy:
+  - provider: releases
+    api_key:
+      secure: sXLUmqqrcEKel/mHk0g8k0XB7D8PE1Q/8oQkf79jSvoKBfX3+MsUqV6/YlxeO/sCk6SOstn5pNWjr/JsuNv752PaOJs5IAoxsUj2xzWDkoWKoW93NUlzhDfLWi2ITqmmzWwA92fxUkfaok4PPmk1deB0ywmxc8JEXN1PT12kT+ccyVN1R/meqP7auhrqWKVRU5zGpuhIQ8XPp+VRKKJh/odFiTtCFIA0uXRvjHlJLP7OAajMmjEycKGBiJCgIqoe5Ut2rEBAIcmaWy2T23y5o3DBhP4eKIvKXLKAVqLhcsVFgGURTESEMDmdJk3K6EMxY3sdCZBtP3qNHXCsqnfNrJTqf5SiZYr+JwscuoHrAFMZbc4LlC8J3NnbjJane9Co+6pFTK2aWGtxXEKfA8fsgAVDoA3f4J6SH8/HyrZGILeg+MZvUQ613QHViwhjypbvMnHYv6hAWa6ntxDoufZXG3smmwmVtZ5QHZmUXSmZbnNQsBhBHFTtyuvgudzA63LLPCmTu0JvhE/CLTjl2g6ItgKDBVDuCtfDFB9yz2JLAOqPf+t8znfZeh/ft3piWbX4ehJaaKVXnMnVzzs7wJKS+9wZRIbw5NwE8PErkplKqvXJQH6kH1YGUdtb4M7TT/zzXJqFPLXMLwGRfE1qmhhAWHtaftYCJpY2KXL89J+sGHA=
+    file_glob: true
+    file: dist/geokrety_api_models-*.tar.gz
+    skip_cleanup: true
+    on:
+      tags: true
+      repo: geokrety/geokrety-api-models
+
+  - provider: pypi
+    user: geokrety-bot
+    password:
+      secure: D6qjz9fdAbsPAxTU9Q7PBZzSO+821fj1dEQf1yzh8Qk1Ffob82a/JO+gLAgbRJAGZrI4Yo2ii7xMcdW4PU+/si7L0Z6GWTC5qBuRX5YPBj8BrPCngHl300nqhoA9/Cj8/t5NdXmBhN83seK1mM9fytgfQLYeO4YX1p4uE/VgfTehtEcIWpg90nuq3wpMCbQcN5H8fogykyRGHQxBOdcEfiM9jcwdhjH/+rutT4O4oj/In+/rm0DlMkXv7KmzveQwMrKsaZviYfG7qHkEeDeEK4JKQwvixYbnhhdKSfFOcJwtB0mRecgvPD2oth2ZIckPI31tA89T9JHbSK4YGEVAArlvREi4afCJjjt6QoVJnf8zQdaTVy1B3LytEJnTL9ZlVbUTzL/D1maovV9oNHfgJSRufO3Ouk3C0e31fizFmrNYkZ266hseXTbnem1l4Lvg8sGKQbzAPeyx0jPjaPzLFrrugGjzWAdxObTEd0dvnNrhQYX6bUdp646cHMYuqc/n6AZd8Ou49hk+PlIINoxDPHbF4sTcM11HJau8El3rfxbaAucotOruihjvhFl/oqhtM7E0YA94ujhuMCu/niLu892i7B3naWrbUPjcS5+awe6bY951JoOxoc8s/vV8xlz7QWl0FRVjUvbvfT34qEFIu9IVUDYTZc8vxdUAdkh3ZjM=
+    on:
+      tags: true
+      repo: geokrety/geokrety-api-models
