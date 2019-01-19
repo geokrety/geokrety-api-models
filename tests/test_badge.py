@@ -28,5 +28,4 @@ class TestBadge(DatabaseTest):
         badge.author = user
         self.session.add(badge)
 
-        self.session.commit()
         self.assertEqual(badge.name, "some name")
