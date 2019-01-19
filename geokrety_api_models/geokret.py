@@ -81,7 +81,7 @@ class Geokret(Base):
         nullable=False,
         default=0,
     )
-    created_on_datetime = Column(
+    _created_on_datetime = Column(
         'data',
         DateTime,
         nullable=False,
@@ -211,6 +211,22 @@ class Geokret(Base):
     def description(cls):
         return cls._description
 
+    @hybrid_property
+    def created_on_datetime(self):
+        if self._created_on_datetime is None:
+            raise AssertionError("created_on_datetime is missing")
+        if isinstance(self._created_on_datetime, str):
+            self._created_on_datetime = datetime.strptime(self._created_on_datetime, "%Y-%m-%dT%H:%M:%S")
+        return round_microseconds(self._created_on_datetime)
+
+    @created_on_datetime.setter
+    def created_on_datetime(self, created_on_datetime):
+        self._created_on_datetime = created_on_datetime
+
+    @created_on_datetime.expression
+    def created_on_datetime(cls):
+        return cls._created_on_datetime
+
 
 @event.listens_for(Geokret, 'init')
 def receive_init(target, args, kwargs):
@@ -219,9 +235,9 @@ def receive_init(target, args, kwargs):
 
 @event.listens_for(Geokret, 'before_insert')
 def before_insert_listener(mapper, connection, target):
-    if not target.created_on_datetime:
-        target.created_on_datetime = round_microseconds(datetime.utcnow())
-    target.updated_on_datetime = target.created_on_datetime
+    if not target._created_on_datetime:
+        target._created_on_datetime = round_microseconds(datetime.utcnow())
+    target.updated_on_datetime = target._created_on_datetime
 
 
 @event.listens_for(Geokret, 'before_update')
