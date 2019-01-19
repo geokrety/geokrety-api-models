@@ -1,5 +1,5 @@
-import unittest
 import os
+import unittest
 
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import Session
@@ -11,7 +11,8 @@ def setup_module():
     global transaction, connection, engine
 
     # Connect to the database and create the schema within a transaction
-    engine = create_engine(os.environ.get('TEST_DATABASE_URL', 'mysql+mysqldb://root@127.0.0.1/geokrety_unittest?charset=utf8mb4'))
+    engine = create_engine(os.environ.get('TEST_DATABASE_URL',
+                                          'mysql+mysqldb://root@127.0.0.1/geokrety_unittest?charset=utf8mb4'))
     connection = engine.connect()
     transaction = connection.begin()
     Base.metadata.create_all(connection)
