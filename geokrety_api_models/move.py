@@ -233,6 +233,8 @@ class Move(Base):
 
     @hybrid_property
     def _moved_on_datetime(self):
+        if self.moved_on_datetime is None:
+            raise AssertionError("moved_on_datetime is missing")
         if isinstance(self.moved_on_datetime, str):
             self.moved_on_datetime = datetime.strptime(self.moved_on_datetime, "%Y-%m-%dT%H:%M:%S")
         return round_microseconds(self.moved_on_datetime)
@@ -241,6 +243,10 @@ class Move(Base):
 @event.listens_for(Move, 'before_update')
 @event.listens_for(Move, 'before_insert')
 def my_before_insert_listener(mapper, connection, target):
+    if target.geokret is None:
+        raise GKUnprocessableEntity("Move must concern a GeoKret",
+                                    {'pointer': '/data/relationships/geokret'})
+
     # Move cannot be done before GeoKret birth
     if target._moved_on_datetime < target.geokret.created_on_datetime:
         raise GKUnprocessableEntity("Move date cannot be prior GeoKret birth date",
