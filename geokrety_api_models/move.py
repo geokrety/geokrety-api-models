@@ -264,7 +264,7 @@ def my_before_insert_listener(mapper, connection, target):
             select([func.count()]).select_from(move_table).
             where(Move.moved_on_datetime == target.moved_on_datetime).
             where(Move.geokret_id == target.geokret.id).
-            where(Move.id == target.id)
+            where(Move.id != target.id)
         ).scalar()
         if res > 0:
             raise GKUnprocessableEntity("There is already a move at that time",
