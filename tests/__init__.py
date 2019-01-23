@@ -1,10 +1,12 @@
 import os
 import unittest
 
+from mixer.backend.sqlalchemy import Mixer
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm.session import Session
 
 from geokrety_api_models.base import Base
+from .mixins.responses_mixin import ResponsesMixin
 
 
 def setup_module():
@@ -26,11 +28,15 @@ def teardown_module():
     engine.dispose()
 
 
-class DatabaseTest(unittest.TestCase):
+class DatabaseTest(ResponsesMixin, unittest.TestCase):
     def setUp(self):
+        super(DatabaseTest, self).setUp()
         self.__transaction = connection.begin_nested()
         self.session = Session(connection)
 
+        self.mixer = Mixer(session=self.session, commit=True)
+
     def tearDown(self):
+        super(DatabaseTest, self).tearDown()
         self.session.close()
         self.__transaction.rollback()

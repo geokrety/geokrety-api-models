@@ -4,8 +4,7 @@ import datetime
 import random
 
 import phpass
-from sqlalchemy import (Boolean, Column, DateTime, Integer, String, event,
-                        inspect)
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, event
 from sqlalchemy.dialects.mysql import DOUBLE, INTEGER
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
@@ -198,37 +197,3 @@ class User(Base):
 def receive_init(target, args, kwargs):
     target.secid = ''.join(random.choice('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(84))  # TODO
     # target.ip = request.remote_addr
-
-
-MONITORED_ATTRIBUTES = [
-    '_name',
-    'is_admin',
-    '_password',
-    'email',
-    'daily_mails',
-    'ip',
-    'language',
-    'latitude',
-    'longitude',
-    'observation_radius',
-    'country',
-    'hour',
-    'statpic_id',
-    'last_mail_datetime',
-    'last_login_datetime',
-    'last_update_datetime',
-    'secid',
-]
-
-
-def _has_changes_that_need_event(instance):
-    instance_attrs = inspect(instance).attrs
-    for attribute in MONITORED_ATTRIBUTES:
-        if hasattr(instance_attrs, attribute) and \
-                getattr(instance_attrs, attribute).history.has_changes():
-            return True
-
-
-if __name__ == '__main__':
-    # Check
-    user = User()
