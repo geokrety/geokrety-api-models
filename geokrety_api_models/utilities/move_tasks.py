@@ -20,16 +20,16 @@ def update_geokret_and_moves(session, geokrety, moves=None):
         moves = [moves]
 
     for move_id in moves:
-        update_move_comments_type(move_id)
-        update_move_country_and_altitude(move_id)
+        update_move_comments_type(session, move_id)
+        update_move_country_and_altitude(session, move_id)
 
     for geokret_id in geokrety:
         # Enhance Move content
-        update_move_distances(geokret_id)
+        update_move_distances(session, geokret_id)
         # Enhance GeoKret content
-        update_geokret_total_moves_count(geokret_id)
-        update_geokret_holder(geokret_id)
-        update_geokret_missing(geokret_id)
+        update_geokret_total_moves_count(session, geokret_id)
+        update_geokret_holder(session, geokret_id)
+        update_geokret_missing(session, geokret_id)
 
     try:
         session.commit()
@@ -46,11 +46,16 @@ def update_geokret_and_moves(session, geokrety, moves=None):
     # *
 
 
-def update_move_distances(geokret_id):
+def update_move_distances(session, geokret_id):
     """ Recompute and update all moves distances for a GeoKret
     """
-    moves = Move.query.filter(Move.geokret_id == geokret_id).order_by(Move.moved_on_datetime.asc())
-    geokret = Geokret.query.get(geokret_id)
+    moves = session.query(Move) \
+        .filter(Move.geokret_id == geokret_id) \
+        .order_by(Move.moved_on_datetime.asc()) \
+        .all()
+    # moves = Move.query.filter(Move.geokret_id == geokret_id).order_by(Move.moved_on_datetime.asc())
+    geokret = session.query(Geokret) \
+        .get(geokret_id)
 
     last = None
     total_distance = 0
@@ -74,10 +79,11 @@ def update_move_distances(geokret_id):
     geokret.distance = total_distance
 
 
-def update_move_country_and_altitude(move_id):
+def update_move_country_and_altitude(session, move_id):
     """ Obtain and update country and altitude of a move
     """
-    move = Move.query.get(move_id)
+    move = session.query(Move) \
+        .get(move_id)
 
     if move.latitude is not None and move.longitude is not None:
         response = requests.get(
@@ -98,27 +104,29 @@ def update_move_country_and_altitude(move_id):
         move.altitude = -32768
 
 
-def update_geokret_total_moves_count(geokret_id):
+def update_geokret_total_moves_count(session, geokret_id):
     """ Update GeoKret total move count
     """
-    moves = Move.query \
+    moves = session.query(Move) \
         .filter(Move.geokret_id == geokret_id) \
         .filter(Move.type.in_((MOVE_TYPE_DROPPED, MOVE_TYPE_SEEN, MOVE_TYPE_DIPPED))) \
         .order_by(Move.moved_on_datetime.desc())
 
-    geokret = Geokret.query.get(geokret_id)
+    geokret = session.query(Geokret) \
+        .get(geokret_id)
     geokret.caches_count = moves.count()
 
 
-def update_geokret_holder(geokret_id):
+def update_geokret_holder(session, geokret_id):
     """ Update GeoKret holder
     """
-    moves = Move.query \
+    moves = session.query(Move) \
         .filter(Move.geokret_id == geokret_id) \
         .filter(Move.type != MOVE_TYPE_COMMENT) \
         .order_by(Move.moved_on_datetime.desc())
 
-    geokret = Geokret.query.get(geokret_id)
+    geokret = session.query(Geokret) \
+        .get(geokret_id)
 
     geokret.holder_id = None
     if moves.count():
@@ -130,11 +138,12 @@ def update_geokret_holder(geokret_id):
                 break
 
 
-def update_geokret_missing(geokret):
+def update_geokret_missing(session, geokret):
     """ Update GeoKret missing status
     """
     if not isinstance(geokret, Geokret):
-        geokret = Geokret.query.get(geokret)
+        geokret = session.query(Geokret) \
+            .get(geokret)
 
     if geokret.last_position is not None:
         for comment in geokret.last_position.comments:
@@ -144,11 +153,11 @@ def update_geokret_missing(geokret):
     geokret.missing = False
 
 
-def update_move_comments_type(move_id):
+def update_move_comments_type(session, move_id):
     """ Convert move comment type to comment when necessary
     """
-    move = Move.query.get(move_id)
+    move = session.query(Move) \
+        .get(move_id)
     if move.type in (MOVE_TYPE_DIPPED, MOVE_TYPE_COMMENT, MOVE_TYPE_GRABBED, MOVE_TYPE_ARCHIVED):
         for comment in move.comments:
             comment.type = MOVE_COMMENT_TYPE_COMMENT
-    # session.add(move)

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="geokrety_api_models",
-    version="0.0.2",
+    version="0.0.3",
     author="Mathieu Alorent",
     author_email="kumy@geokrety.org",
     description="The GeoKrety API ORM",

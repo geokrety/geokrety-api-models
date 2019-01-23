@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Integer, String,
-                        event, func, inspect, select)
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.dialects.mysql import DOUBLE
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 
 import bleach
 import characterentities
-from geokrety_api_exceptions.json_api import GKUnprocessableEntity
 
 from .base import Base
 from .utilities.date import round_microseconds
@@ -233,46 +231,6 @@ class Move(Base):
 
     @hybrid_property
     def _moved_on_datetime(self):
-        if self.moved_on_datetime is None:
-            raise AssertionError("moved_on_datetime is missing")
         if isinstance(self.moved_on_datetime, str):
             self.moved_on_datetime = datetime.strptime(self.moved_on_datetime, "%Y-%m-%dT%H:%M:%S")
         return round_microseconds(self.moved_on_datetime)
-
-
-@event.listens_for(Move, 'before_update')
-@event.listens_for(Move, 'before_insert')
-def my_before_insert_listener(mapper, connection, target):
-    if target.geokret is None:
-        raise GKUnprocessableEntity("Move must concern a GeoKret",
-                                    {'pointer': '/data/relationships/geokret'})
-
-    # Move cannot be done before GeoKret birth
-    if target._moved_on_datetime < target.geokret.created_on_datetime:
-        raise GKUnprocessableEntity("Move date cannot be prior GeoKret birth date",
-                                    {'pointer': '/data/attributes/moved-on-datetime'})
-
-    # Move cannot be done in the future
-    if target._moved_on_datetime > datetime.utcnow().replace(microsecond=0) + timedelta(seconds=1):
-        raise GKUnprocessableEntity("Move date cannot be in the future",
-                                    {'pointer': '/data/attributes/moved-on-datetime'})
-
-    # Identical move date is forbidden
-    if _has_changes_that_need_recompute(target):
-        move_table = Move.__table__
-        res = connection.execute(
-            select([func.count()]).select_from(move_table).
-            where(Move.moved_on_datetime == target.moved_on_datetime).
-            where(Move.geokret_id == target.geokret.id).
-            where(Move.id != target.id)
-        ).scalar()
-        if res > 0:
-            raise GKUnprocessableEntity("There is already a move at that time",
-                                        {'pointer': '/data/attributes/moved-on-datetime'})
-
-
-def _has_changes_that_need_recompute(instance):
-    if inspect(instance).attrs.type.history.has_changes() or \
-            inspect(instance).attrs.moved_on_datetime.history.has_changes() or \
-            inspect(instance).attrs.geokret.history.has_changes():
-        return True

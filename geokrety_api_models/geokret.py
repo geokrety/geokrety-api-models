@@ -4,7 +4,7 @@ import random
 from datetime import datetime
 
 from sqlalchemy import (TIMESTAMP, Boolean, Column, DateTime, Enum, ForeignKey,
-                        Integer, String, Text, event, inspect)
+                        Integer, String, Text, event)
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.exc import NoResultFound
@@ -81,7 +81,7 @@ class Geokret(Base):
         nullable=False,
         default=0,
     )
-    _created_on_datetime = Column(
+    created_on_datetime = Column(
         'data',
         DateTime,
         nullable=False,
@@ -211,22 +211,6 @@ class Geokret(Base):
     def description(cls):
         return cls._description
 
-    @hybrid_property
-    def created_on_datetime(self):
-        if self._created_on_datetime is None:
-            raise AssertionError("created_on_datetime is missing")
-        if isinstance(self._created_on_datetime, str):
-            self._created_on_datetime = datetime.strptime(self._created_on_datetime, "%Y-%m-%dT%H:%M:%S")
-        return round_microseconds(self._created_on_datetime)
-
-    @created_on_datetime.setter
-    def created_on_datetime(self, created_on_datetime):
-        self._created_on_datetime = created_on_datetime
-
-    @created_on_datetime.expression
-    def created_on_datetime(cls):
-        return cls._created_on_datetime
-
 
 @event.listens_for(Geokret, 'init')
 def receive_init(target, args, kwargs):
@@ -235,36 +219,11 @@ def receive_init(target, args, kwargs):
 
 @event.listens_for(Geokret, 'before_insert')
 def before_insert_listener(mapper, connection, target):
-    if not target._created_on_datetime:
-        target._created_on_datetime = round_microseconds(datetime.utcnow())
-    target.updated_on_datetime = target._created_on_datetime
+    if not target.created_on_datetime:
+        target.created_on_datetime = round_microseconds(datetime.utcnow())
+    target.updated_on_datetime = target.created_on_datetime
 
 
 @event.listens_for(Geokret, 'before_update')
 def before_update_listener(mapper, connection, target):
     target.updated_on_datetime = round_microseconds(datetime.utcnow())
-
-
-MONITORED_ATTRIBUTES = [
-    'tracking_code',
-    '_name',
-    '_description',
-    'type',
-    'missing',
-    'distance',
-    'caches_count',
-    'pictures_count',
-    'updated_on_datetime',
-    'owner_id',
-    'holder_id',
-    'last_position_id',
-    'last_move_id',
-]
-
-
-def _has_changes_that_need_event(instance):
-    instance_attrs = inspect(instance).attrs
-    for attribute in MONITORED_ATTRIBUTES:
-        if hasattr(instance_attrs, attribute) and \
-                getattr(instance_attrs, attribute).history.has_changes():
-            return True

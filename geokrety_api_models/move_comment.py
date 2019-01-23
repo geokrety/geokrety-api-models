@@ -2,8 +2,7 @@
 
 import datetime
 
-from sqlalchemy import (Column, DateTime, ForeignKey, Integer, String, event,
-                        inspect)
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, event
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
@@ -131,9 +130,3 @@ def before_insert_listener(mapper, connection, target):
 @event.listens_for(MoveComment, "before_update")
 def before_update(mapper, connection, target):
     target.is_missing_authorized()
-
-
-def _has_changes_that_need_recompute(instance):
-    if inspect(instance).attrs.type.history.has_changes() or \
-            inspect(instance).attrs.move.history.has_changes():
-        return True
