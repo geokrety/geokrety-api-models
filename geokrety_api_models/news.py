@@ -71,7 +71,7 @@ class News(Base):
     )
 
     # author = relationship('User', backref=backref('news'))
-    news_comments = relationship(
+    comments = relationship(
         'NewsComment',
         backref="news",
         cascade="all,delete"
