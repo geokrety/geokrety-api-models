@@ -47,12 +47,18 @@ class Geokret(Base):
         nullable=False,
         default='',
     )
-    type = Column(
+    type_id = Column(
         'typ',
         Enum('0', '1', '2', '3', '4'),
+        ForeignKey('gk-geokrety-types.id'),
         key='type',
         nullable=False,
     )
+    type = relationship(
+        "GeokretyType",
+        foreign_keys=[type_id],
+    )
+
     missing = Column(
         'missing',
         Boolean,

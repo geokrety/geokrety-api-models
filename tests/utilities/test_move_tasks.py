@@ -28,7 +28,7 @@ class TestMoveTasksHelper(DatabaseTest):
         self.user3 = self.mixer.blend(User)
         self.user4 = self.mixer.blend(User)
 
-        self.geokret1 = self.mixer.blend(Geokret, type=GEOKRET_TYPE_TRADITIONAL,
+        self.geokret1 = self.mixer.blend(Geokret, type_id=GEOKRET_TYPE_TRADITIONAL,
                                          owner=self.user1, holder=self.user1, tracking_code="ABC123",
                                          created_on_datetime="2017-12-01T14:18:22")
 

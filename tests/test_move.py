@@ -13,7 +13,7 @@ class TestMove(DatabaseTest):
     def test_create(self):
         user = User(name="username", password="password", email="user@geokrety.org")
         geokret = Geokret(name="My GeoKret",
-                          type=GEOKRET_TYPE_TRADITIONAL,
+                          type_id=GEOKRET_TYPE_TRADITIONAL,
                           created_on_datetime="2019-01-19T22:46:44")
         move1 = Move(geokret=geokret,
                      moved_on_datetime="2019-01-19T22:46:44",

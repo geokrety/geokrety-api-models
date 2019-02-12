@@ -7,6 +7,8 @@ from sqlalchemy.orm.session import Session
 
 from geokrety_api_models.base import Base
 from .mixins.responses_mixin import ResponsesMixin
+from geokrety_api_models.utilities.const import GEOKRET_TYPES_TEXT
+from geokrety_api_models import GeokretyType
 
 
 def setup_module():
@@ -33,6 +35,9 @@ class DatabaseTest(ResponsesMixin, unittest.TestCase):
         super(DatabaseTest, self).setUp()
         self.__transaction = connection.begin_nested()
         self.session = Session(connection)
+        for (key, val) in GEOKRET_TYPES_TEXT.iteritems():
+            geokret = GeokretyType(id=key, name=val)
+            self.session.add(geokret)
 
         self.mixer = Mixer(session=self.session, commit=True)
 
