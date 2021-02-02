@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/geokrety/geokrety-api-models",
     packages=setuptools.find_packages(),
     install_requires=[
-        "bleach==3.1.0",
+        "bleach==3.3.0",
         "characterentities==0.1.2",
         "SQLAlchemy==1.2.13",
         "mysqlclient==1.3.14",
