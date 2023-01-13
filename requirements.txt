@@ -6,4 +6,4 @@ mysqlclient==1.4.1
 bcrypt==3.1.6
 git+https://github.com/exavolt/python-phpass.git#egg=python-phpass
 geopy==1.18.1
-requests[security]==2.21.0
+requests[security]==2.28.2
